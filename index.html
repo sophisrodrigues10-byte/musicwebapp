@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Músicas do Momento</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <h1>Descubra Novas Músicas</h1>
+            <p>Busque por artistas, músicas ou álbuns</p>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Pesquisar música ou artista...">
+                <button id="searchButton">
+                    Pesquisar
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <section id="music-grid" class="music-grid"></section>
+        <p id="noResults" class="no-results" style="display: none;">Nenhum resultado encontrado. Tente novamente!</p>
+    </main>
+
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div class="modal-body">
+                <img id="modalImage" src="" alt="Capa do Álbum">
+                <div class="modal-info">
+                    <h2 id="modalTrackName"></h2>
+                    <p><strong>Artista:</strong> <span id="modalArtistName"></span></p>
+                    <p><strong>Álbum:</strong> <span id="modalAlbumName"></span></p>
+                    <p><strong>Gênero:</strong> <span id="modalGenre"></span></p>
+                    <p><strong>Ano:</strong> <span id="modalReleaseDate"></span></p>
+                    <a id="modalLink" href="#" target="_blank" class="modal-link-button">Ouvir no iTunes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
+<style>
+/* Paleta de Cores e Tipografia */
+:root {
+    --primary-color: #2e7d32; /* Um verde escuro, cor do Spotify */
+    --secondary-color: #4CAF50; /* Um verde mais claro */
+    --background-color: #f0f4f8;
+    --card-bg: #ffffff;
+    --text-color: #333333;
+    --font-family: 'Poppins', sans-serif;
+}
+
+/* Estilos Globais */
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* Header */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 60px 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header-content h1 {
+    font-size: 2.5em;
+    margin: 0;
+}
+
+.header-content p {
+    font-size: 1.1em;
+    opacity: 0.8;
+}
+
+.search-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 50px 0 0 50px;
+    font-size: 1em;
+    outline: none;
+}
+
+#searchButton {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 0 50px 50px 0;
+    background-color: var(--secondary-color);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#searchButton:hover {
+    background-color: #43a047;
+}
+
+/* Conteúdo Principal */
+main {
+    padding: 40px 20px;
+}
+
+.music-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    justify-content: center;
+}
+
+.music-card {
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+}
+
+.music-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.music-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.music-info {
+    padding: 15px;
+}
+
+.music-info h3 {
+    margin: 0 0 5px;
+    font-size: 1.1em;
+    color: var(--primary-color);
+}
+
+.music-info p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #777;
+}
+
+.no-results {
+    text-align: center;
+    font-size: 1.2em;
+    color: #999;
+    margin-top: 50px;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    color: #aaa;
+    font-size: 2em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: var(--primary-color);
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.modal-body img {
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+}
+
+.modal-info h2 {
+    margin: 10px 0;
+    font-size: 1.5em;
+    color: var(--primary-color);
+}
+
+.modal-info p {
+    margin: 5px 0;
+    color: var(--text-color);
+}
+
+.modal-link-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-top: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    transition: background-color 0.3s;
+}
+
+.modal-link-button:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Responsividade */
+@media (min-width: 768px) {
+    .header-content h1 {
+        font-size: 3em;
+    }
+    .modal-body {
+        flex-direction: row;
+        text-align: left;
+    }
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const musicGrid = document.getElementById('music-grid');
+    const noResults = document.getElementById('noResults');
+    const detailsModal = document.getElementById('detailsModal');
+    const closeButton = document.querySelector('.close-button');
+
+    // Função para buscar músicas na API do iTunes
+    const fetchMusic = async (query) => {
+        if (!query) {
+            // Limpa a grade e não exibe nada se a busca estiver vazia
+            musicGrid.innerHTML = '';
+            noResults.style.display = 'none';
+            return;
+        }
+
+        // Exibe uma mensagem de carregamento ou esconde resultados antigos
+        musicGrid.innerHTML = '';
+        noResults.style.display = 'none';
+
+        // Endpoint da API do iTunes
+        const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=20`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.results.length > 0) {
+                renderMusicCards(data.results);
+            } else {
+                noResults.style.display = 'block';
+            }
+
+        } catch (error) {
+            console.error('Erro ao buscar dados da API:', error);
+            noResults.textContent = 'Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.';
+            noResults.style.display = 'block';
+        }
+    };
+
+    // Função para renderizar os cards de música
+    const renderMusicCards = (songs) => {
+        songs.forEach(song => {
+            const card = document.createElement('div');
+            card.className = 'music-card';
+
+            card.innerHTML = `
+                <img src="${song.artworkUrl100.replace('100x100bb', '400x400bb')}" alt="${song.trackName} - ${song.artistName}">
+                <div class="music-info">
+                    <h3>${song.trackName}</h3>
+                    <p>${song.artistName}</p>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                showModal(song);
+            });
+
+            musicGrid.appendChild(card);
+        });
+    };
+
+    // Função para exibir o modal com os detalhes da música
+    const showModal = (song) => {
+        document.getElementById('modalImage').src = song.artworkUrl100.replace('100x100bb', '600x600bb');
+        document.getElementById('modalImage').alt = `${song.trackName} - ${song.artistName}`;
+        document.getElementById('modalTrackName').textContent = song.trackName;
+        document.getElementById('modalArtistName').textContent = song.artistName;
+        document.getElementById('modalAlbumName').textContent = song.collectionName;
+        document.getElementById('modalGenre').textContent = song.primaryGenreName;
+        document.getElementById('modalReleaseDate').textContent = new Date(song.releaseDate).getFullYear();
+        document.getElementById('modalLink').href = song.collectionViewUrl;
+
+        detailsModal.style.display = 'flex';
+    };
+
+    // Evento de clique para fechar o modal
+    closeButton.addEventListener('click', () => {
+        detailsModal.style.display = 'none';
+    });
+
+    // Evento para fechar o modal ao clicar fora dele
+    window.addEventListener('click', (event) => {
+        if (event.target === detailsModal) {
+            detailsModal.style.display = 'none';
+        }
+    });
+
+    // Evento de clique no botão de pesquisa
+    searchButton.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        fetchMusic(query);
+    });
+
+    // Evento de "Enter" na barra de pesquisa
+    searchInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            const query = searchInput.value.trim();
+            fetchMusic(query);
+        }
+    });
+
+    // Carregar músicas populares de One Direction no início
+    fetchMusic('One Direction');
+});
+</script>
